@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { AppProps } from 'next/app';
 import Head from 'next/head';
 import theme from '../src/theme';
-import { MachineReactContext } from '../src/machines/machine';
+import { MachineReactContext } from '@/machines/machine';
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;

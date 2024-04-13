@@ -1,8 +1,5 @@
-import { Box, Container } from '@mui/material';
-
-type AppLayoutProps = {
-  children: JSX.Element;
-};
+import { AppLayoutProps } from '@/types';
+import { Container } from '@mui/material';
 
 export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
