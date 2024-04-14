@@ -2,8 +2,10 @@ import { AddressSummary } from '@/components/AddressSummary';
 import { Cart } from '@/components/Cart';
 import { PaymentSummary } from '@/components/PaymentSummary';
 import { ShippingSummary } from '@/components/ShippingSummary';
+import { useScrollTop } from '@/hooks';
 import { MachineReactContext } from '@/machines/machine';
 import { Alert, Box, Button, Stack } from '@mui/material';
+import { useEffect } from 'react';
 
 export const Summary = () => {
   const { cart, address, paymentMethod, shippingMethod } = MachineReactContext.useSelector(
@@ -12,12 +14,17 @@ export const Summary = () => {
   const isInAllowedState = MachineReactContext.useSelector(state =>
     state.hasTag('ready_to_confirm')
   );
-
   const isError = MachineReactContext.useSelector(state => state.hasTag('checkout_error'));
-
   const actorRef = MachineReactContext.useActorRef();
+  const scrollTop = useScrollTop();
 
   const canShowSummary = isInAllowedState && cart && address;
+
+  useEffect(() => {
+    if (isError) {
+      scrollTop();
+    }
+  },[isError]);
 
   return canShowSummary ? (
     <>
