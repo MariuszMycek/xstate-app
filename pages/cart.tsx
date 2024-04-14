@@ -18,6 +18,7 @@ export default function IndexPage() {
     if (isCheckout) {
       router.push('/checkout', undefined, { shallow: true });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onProceed = () => {

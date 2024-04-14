@@ -24,7 +24,8 @@ export const Summary = () => {
     if (isError) {
       scrollTop();
     }
-  },[isError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isError]);
 
   return canShowSummary ? (
     <>
