@@ -40,7 +40,7 @@ export const machine = setup({
     remove_item_from_cart: assign({
       cart: ({ event, context }) => {
         assertEvent(event, 'remove_item');
-        return context.cart.filter(el => el.id !== event.id);
+        return context.cart.filter(el => el.name !== event.name);
       },
     }),
     save_address: assign({
@@ -115,6 +115,11 @@ export const machine = setup({
       if (context.cart.some(({ price }) => Number(price) > 0)) return false;
       return true;
     },
+    can_add_to_cart: ({ context, event }) => {
+      assertEvent(event, 'add_item');
+      if (context.cart.map(({ name }) => name).includes(event.item.name)) return false;
+      return true;
+    },
   },
   actors: {
     confirmOrder: fromPromise(async ({ input }: { input: Order }) => {
@@ -137,6 +142,7 @@ export const machine = setup({
             add_item: {
               target: 'not_empty',
               actions: 'add_item_to_cart',
+              guard: 'can_add_to_cart',
             },
           },
         },
@@ -148,6 +154,7 @@ export const machine = setup({
             },
             add_item: {
               actions: 'add_item_to_cart',
+              guard: 'can_add_to_cart',
             },
             remove_item: [
               {
@@ -156,7 +163,6 @@ export const machine = setup({
                 guard: 'is_last_removed',
               },
               {
-                target: 'not_empty',
                 actions: 'remove_item_from_cart',
               },
             ],

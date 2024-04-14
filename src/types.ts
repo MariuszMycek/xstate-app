@@ -34,7 +34,6 @@ export type CartProps = {
 export type IsShippingRequiredFieldValue = 'true' | 'false' | '';
 
 export type ItemValues = {
-  id: string;
   name: string;
   price: string;
   isShippingRequired: IsShippingRequiredFieldValue;
@@ -72,7 +71,7 @@ export type EventsType =
   | { type: 'skip_shipping' }
   | { type: 'select_payment'; paymentMethod: PaymentMethods }
   | { type: 'select_shipping'; shippingMethod: ShippingMethods }
-  | { type: 'remove_item'; id: ItemValues['id'] }
+  | { type: 'remove_item'; name: ItemValues['name'] }
   | { type: 'add_item'; item: ItemValues }
   | { type: 'proceed_to_checkout' }
   | { type: 'change_view'; view: Views }

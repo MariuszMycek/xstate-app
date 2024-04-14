@@ -15,9 +15,9 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { CartProps, ItemValues } from '@/types';
 
-function total(items: readonly ItemValues[]) {
+const total = (items: readonly ItemValues[]) => {
   return items.map(({ price }) => price).reduce((sum, i) => Number(sum) + Number(i) * 100, 0) / 100;
-}
+};
 
 export const Cart = ({ isSummary }: CartProps) => {
   const itemList = MachineReactContext.useSelector(state => state.context.cart);
@@ -58,12 +58,11 @@ export const Cart = ({ isSummary }: CartProps) => {
                       <CloseIcon color="error" />
                     )}
                   </TableCell>
-
                   {!isSummary && (
                     <TableCell align="center">
                       <Button
                         color="error"
-                        onClick={() => actorRef.send({ type: 'remove_item', id: item.id })}
+                        onClick={() => actorRef.send({ type: 'remove_item', name: item.name })}
                       >
                         Remove
                       </Button>

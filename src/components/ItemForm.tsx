@@ -13,7 +13,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { v4 as uuidv4 } from 'uuid';
 
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -29,21 +28,31 @@ const validationSchema = yup.object({
   isShippingRequired: yup.string().required('Please choose one option'),
 });
 
+const validateItemName = (values: ItemValues, cart: ItemValues[]) => {
+  const errors: Partial<ItemValues> = {};
+  if (cart.map(({ name }) => name).includes(values.name)) {
+    errors.name = 'The product with the given name is already in the cart';
+  }
+
+  return errors;
+};
+
 export const ItemForm = () => {
   const actorRef = MachineReactContext.useActorRef();
+  const cart = MachineReactContext.useSelector(state => state.context.cart);
   const { values, handleSubmit, handleChange, touched, errors, setFieldValue, resetForm } =
-    useFormik<Omit<ItemValues, 'id'>>({
+    useFormik<ItemValues>({
       initialValues: {
         name: '',
         price: '',
         isShippingRequired: '',
       },
       validationSchema: validationSchema,
+      validate: values => validateItemName(values, cart),
       onSubmit: values => {
         const valuesToSubmit = {
           ...values,
           name: values.name.trim(),
-          id: uuidv4(),
         };
         actorRef.send({ type: 'add_item', item: valuesToSubmit });
         resetForm();
