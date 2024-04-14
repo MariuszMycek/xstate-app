@@ -20,7 +20,9 @@ export const PaymentSummary = ({ paymentMethod }: PaymentSummaryProps) => {
         <Table aria-label="payment method table">
           <TableBody>
             <TableRow>
-              <TableCell component="th">{paymentMethod || 'Skipped'}</TableCell>
+              <TableCell component="th" sx={{ border: 0 }}>
+                {paymentMethod || 'Skipped'}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>

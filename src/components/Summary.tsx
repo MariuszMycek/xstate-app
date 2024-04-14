@@ -3,28 +3,42 @@ import { Cart } from '@/components/Cart';
 import { PaymentSummary } from '@/components/PaymentSummary';
 import { ShippingSummary } from '@/components/ShippingSummary';
 import { MachineReactContext } from '@/machines/machine';
-import { Box, Button, Stack } from '@mui/material';
+import { Alert, Box, Button, Stack } from '@mui/material';
 
 export const Summary = () => {
   const { cart, address, paymentMethod, shippingMethod } = MachineReactContext.useSelector(
     state => state.context
   );
-
-  const isInAllowedState = MachineReactContext.useSelector(
-    state => state.matches('payment_selected') || state.matches('payment_skipped')
+  const isInAllowedState = MachineReactContext.useSelector(state =>
+    state.hasTag('ready_to_confirm')
   );
+
+  const isError = MachineReactContext.useSelector(state => state.hasTag('checkout_error'));
+
+  const actorRef = MachineReactContext.useActorRef();
+
   const canShowSummary = isInAllowedState && cart && address;
 
   return canShowSummary ? (
     <>
       <Stack spacing={3}>
+        {isError && (
+          <Alert elevation={1} severity="error" variant="filled">
+            An error occurred while completing the order. Please try again.
+          </Alert>
+        )}
+
         <Cart isSummary />
         <AddressSummary address={address} />
         <ShippingSummary shippingMethod={shippingMethod} />
         <PaymentSummary paymentMethod={paymentMethod} />
       </Stack>
       <Box pt={2} display="flex" justifyContent="flex-end">
-        <Button variant="contained" color="secondary">
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => actorRef.send({ type: 'confirm' })}
+        >
           Order
         </Button>
       </Box>

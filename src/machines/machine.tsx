@@ -1,7 +1,32 @@
+import { sendOrder } from '@/api';
 import { paymentOptions, shippingOptions, steps } from '@/data';
-import { ContextType, EventsType, Step, Views } from '@/types';
+import { ContextType, EventsType, Order, Step, Views } from '@/types';
 import { createActorContext } from '@xstate/react';
-import { assertEvent, assign, setup } from 'xstate';
+import { MachineContext, assertEvent, assign, fromPromise, setup } from 'xstate';
+
+const initialContext: ContextType = {
+  cart: [],
+  address: null,
+  shippingMethod: '',
+  paymentMethod: '',
+  completedStep: null,
+  activeStep: steps[0],
+  isShippingSkipped: false,
+  isPaymentSkipped: false,
+  skippedSteps: [],
+  shippingOptions: [],
+  paymentOptions: paymentOptions,
+};
+
+const confirmInput = ({ context }: MachineContext) => {
+  const { cart, address, shippingMethod, paymentMethod } = context;
+  return {
+    cart,
+    address,
+    shippingMethod,
+    paymentMethod,
+  } as Order;
+};
 
 export const machine = setup({
   types: { context: {} as ContextType, events: {} as EventsType },
@@ -74,6 +99,7 @@ export const machine = setup({
     reset_skipped: assign({
       skippedSteps: [],
     }),
+    reset_context: assign({ ...initialContext }),
   },
   guards: {
     is_last_removed: ({ context }) => {
@@ -90,20 +116,15 @@ export const machine = setup({
       return true;
     },
   },
-}).createMachine({
-  context: {
-    cart: [],
-    address: null,
-    shippingMethod: '',
-    paymentMethod: '',
-    completedStep: null,
-    activeStep: steps[0],
-    isShippingSkipped: false,
-    isPaymentSkipped: false,
-    skippedSteps: [],
-    shippingOptions: [],
-    paymentOptions: paymentOptions,
+  actors: {
+    confirmOrder: fromPromise(async ({ input }: { input: Order }) => {
+      const response = await sendOrder(input);
+
+      return response;
+    }),
   },
+}).createMachine({
+  context: initialContext,
   id: 'orderFlow',
   initial: 'cart',
   states: {
@@ -111,6 +132,7 @@ export const machine = setup({
       initial: 'empty',
       states: {
         empty: {
+          tags: 'cart',
           on: {
             add_item: {
               target: 'not_empty',
@@ -119,6 +141,7 @@ export const machine = setup({
           },
         },
         not_empty: {
+          tags: 'cart',
           on: {
             proceed_to_checkout: {
               target: 'checkout',
@@ -140,6 +163,7 @@ export const machine = setup({
           },
         },
         checkout: {
+          tags: 'checkout',
           entry: { type: 'set_active_step', params: { viewName: 'address' } },
           on: {
             address: {
@@ -151,6 +175,7 @@ export const machine = setup({
       },
     },
     addressed: {
+      tags: 'checkout',
       entry: [
         'reset_skipped',
         'reset_payment',
@@ -188,6 +213,7 @@ export const machine = setup({
       },
     },
     shipping_skipped: {
+      tags: 'checkout',
       entry: [
         'reset_shipping',
         'reset_payment',
@@ -216,6 +242,7 @@ export const machine = setup({
       },
     },
     shipping_selected: {
+      tags: 'checkout',
       entry: [
         'reset_payment',
         { type: 'set_active_step', params: { viewName: 'payment' } },
@@ -251,12 +278,46 @@ export const machine = setup({
       },
     },
     payment_skipped: {
+      tags: ['checkout', 'ready_to_confirm'],
       entry: [
         'reset_payment',
         { type: 'set_active_step', params: { viewName: 'summary' } },
         { type: 'set_completed_step', params: { step: 2 } },
         { type: 'add_to_skipped', params: { step: 2 } },
       ],
+      initial: 'ready_to_confirm',
+      states: {
+        ready_to_confirm: {
+          tags: 'checkout',
+          on: {
+            confirm: {
+              target: 'confirming_order',
+            },
+          },
+        },
+        confirming_order: {
+          tags: ['loading'],
+          invoke: {
+            id: 'sendOrder',
+            src: 'confirmOrder',
+            input: confirmInput,
+            onDone: {
+              target: '#orderFlow.completed',
+            },
+            onError: {
+              target: 'error',
+            },
+          },
+        },
+        error: {
+          tags: ['checkout', 'checkout_error'],
+          on: {
+            confirm: {
+              target: 'confirming_order',
+            },
+          },
+        },
+      },
       on: {
         change_view: {
           actions: 'change_view',
@@ -275,17 +336,47 @@ export const machine = setup({
       },
     },
     payment_selected: {
+      tags: ['checkout', 'ready_to_confirm'],
       entry: [
         { type: 'set_active_step', params: { viewName: 'summary' } },
         { type: 'set_completed_step', params: { step: 2 } },
       ],
+      initial: 'ready_to_confirm',
+      states: {
+        ready_to_confirm: {
+          tags: 'checkout',
+          on: {
+            confirm: {
+              target: 'confirming_order',
+            },
+          },
+        },
+        confirming_order: {
+          tags: ['loading'],
+          invoke: {
+            id: 'sendOrder',
+            src: 'confirmOrder',
+            input: confirmInput,
+            onDone: {
+              target: '#orderFlow.completed',
+            },
+            onError: {
+              target: 'error',
+            },
+          },
+        },
+        error: {
+          tags: ['checkout', 'checkout_error'],
+          on: {
+            confirm: {
+              target: 'confirming_order',
+            },
+          },
+        },
+      },
       on: {
         change_view: {
           actions: 'change_view',
-        },
-        complete: {
-          target: 'completed',
-          actions: [],
         },
         address: {
           target: 'addressed',
@@ -306,7 +397,14 @@ export const machine = setup({
       },
     },
     completed: {
+      tags: 'completed',
       entry: [{ type: 'set_completed_step', params: { step: 3 } }],
+      on: {
+        back_to_cart: {
+          target: 'cart',
+          actions: 'reset_context',
+        },
+      },
     },
   },
 });

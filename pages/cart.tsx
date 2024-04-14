@@ -6,11 +6,11 @@ import { ItemForm } from '../src/components/ItemForm';
 import { useEffect } from 'react';
 
 export default function IndexPage() {
-  const isCart = MachineReactContext.useSelector(state => state.matches('cart'));
+  const isCart = MachineReactContext.useSelector(state => state.hasTag('cart'));
   const canProceedToCheckout = MachineReactContext.useSelector(state =>
     state.matches({ cart: 'not_empty' })
   );
-  const isCheckout = MachineReactContext.useSelector(state => state.matches({ cart: 'checkout' }));
+  const isCheckout = MachineReactContext.useSelector(state => state.hasTag('checkout'));
   const actorRef = MachineReactContext.useActorRef();
   const router = useRouter();
 
@@ -18,13 +18,14 @@ export default function IndexPage() {
     if (isCheckout) {
       router.push('/checkout', undefined, { shallow: true });
     }
-  }, [isCheckout]);
+  }, []);
 
   const onProceed = () => {
     actorRef.send({ type: 'proceed_to_checkout' });
+    router.push('/checkout', undefined, { shallow: true });
   };
 
-  return isCart && !isCheckout ? (
+  return isCart ? (
     <Stack spacing={3}>
       <ItemForm />
       <Cart />

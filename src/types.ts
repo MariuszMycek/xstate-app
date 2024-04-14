@@ -75,7 +75,9 @@ export type EventsType =
   | { type: 'remove_item'; id: ItemValues['id'] }
   | { type: 'add_item'; item: ItemValues }
   | { type: 'proceed_to_checkout' }
-  | { type: 'change_view'; view: Views };
+  | { type: 'change_view'; view: Views }
+  | { type: 'confirm' }
+  | { type: 'back_to_cart' };
 
 export type ContextType = {
   cart: ItemValues[];
@@ -89,4 +91,11 @@ export type ContextType = {
   skippedSteps: number[];
   shippingOptions: ShippingMethods[];
   paymentOptions: PaymentMethods[];
+};
+
+export type Order = {
+  cart: ItemValues[];
+  address: AddressValues;
+  shippingMethod: ShippingMethods;
+  paymentMethod: PaymentMethods;
 };

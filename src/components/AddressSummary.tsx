@@ -29,7 +29,7 @@ export const AddressSummary = ({ address }: AddressSummaryProps) => {
               <TableCell component="th">City</TableCell>
               <TableCell component="th">{address.city}</TableCell>
             </TableRow>
-            <TableRow>
+            <TableRow  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
               <TableCell component="th">Country</TableCell>
               <TableCell component="th">{address.country}</TableCell>
             </TableRow>

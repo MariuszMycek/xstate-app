@@ -20,7 +20,9 @@ export const ShippingSummary = ({ shippingMethod }: ShippingSummaryProps) => {
         <Table aria-label="shipping method table">
           <TableBody>
             <TableRow>
-              <TableCell component="th">{shippingMethod || 'Skipped'}</TableCell>
+              <TableCell component="th" sx={{ border: 0 }}>
+                {shippingMethod || 'Skipped'}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
