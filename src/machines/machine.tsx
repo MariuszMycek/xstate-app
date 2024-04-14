@@ -304,7 +304,7 @@ export const machine = setup({
         confirming_order: {
           tags: ['loading'],
           invoke: {
-            id: 'sendOrder',
+            id: 'complete',
             src: 'confirmOrder',
             input: confirmInput,
             onDone: {
@@ -327,9 +327,6 @@ export const machine = setup({
       on: {
         change_view: {
           actions: 'change_view',
-        },
-        complete: {
-          target: 'completed',
         },
         address: {
           target: 'addressed',
@@ -360,7 +357,7 @@ export const machine = setup({
         confirming_order: {
           tags: ['loading'],
           invoke: {
-            id: 'sendOrder',
+            id: 'complete',
             src: 'confirmOrder',
             input: confirmInput,
             onDone: {
