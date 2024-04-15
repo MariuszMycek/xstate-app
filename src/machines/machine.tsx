@@ -117,7 +117,14 @@ export const machine = setup({
     },
     can_add_to_cart: ({ context, event }) => {
       assertEvent(event, 'add_item');
-      if (context.cart.map(({ name }) => name).includes(event.item.name)) return false;
+      if (
+        context.cart.map(({ name }) => name).includes(event.item.name) ||
+        event.item.name.length ||
+        Number(event.item.price)
+      ) {
+        return false;
+      }
+
       return true;
     },
   },
